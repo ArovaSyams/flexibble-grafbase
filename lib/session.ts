@@ -1,6 +1,7 @@
 import { getServerSession } from 'next-auth/next';
 import { NextAuthOptions, User } from 'next-auth';
-import { AdapterUser } from 'next-auth/adapters';
+// import { AdapterUser } from 'next-auth/adapters';
+import { AdapterUser } from "../node_modules/next-auth/src/adapters"; 
 import GoogleProvider from 'next-auth/providers/google';
 import jsonwebtoken from 'jsonwebtoken';
 import { JWT } from 'next-auth/jwt';
@@ -14,14 +15,22 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!
     })
   ],
-  // jwt: {
-  //   encode: ({ secret, token }) => {
+  jwt: {
+    encode: ({ secret, token }) => {
+      const encodedToken = jsonwebtoken.sign({
+        ...token,
+        iss: 'grafbase',
+        exp: Math.floor(Date.now() / 1000) + 60 * 60
+      }, secret);
 
-  //   },
-  //   decode: async ({ secret, token }) => {
+      return encodedToken;
+    },
+    decode: async ({ secret, token }) => {
+      const decodedToken = jsonwebtoken.verify(token!, secret) as JWT;
 
-  //   }
-  // },
+      return decodedToken;
+    }
+  },
   theme: {
     colorScheme: 'light',
     logo: 'logo.png'
